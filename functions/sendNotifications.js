@@ -1,27 +1,27 @@
 const admin = require('firebase-admin')
 const { db: firestore } = require('../config/firebaseConfig')
 
-// Send notification function
-const sendNotification = async (title, body, userId) => {
+// Send notification function to all users
+const sendNotificationToAllUsers = async (title, body) => {
   try {
-    // Fetch the user's FCM tokens from Firestore
-    const userRef = firestore.collection('users').doc(userId)
-    const userDoc = await userRef.get()
+    // Fetch all users and their FCM tokens from Firestore
+    const usersSnapshot = await firestore.collection('users').get()
 
-    if (!userDoc.exists) {
-      console.log('User not found')
-      return
-    }
+    let allTokens = []
+    usersSnapshot.forEach(userDoc => {
+      const tokens = userDoc.data().fcmTokens
+      if (tokens) {
+        allTokens = allTokens.concat(tokens)
+      }
+    })
 
-    const tokens = userDoc.data().fcmTokens
-
-    if (!tokens || tokens.length === 0) {
-      console.log('No FCM tokens found for user')
+    if (allTokens.length === 0) {
+      console.log('No FCM tokens found')
       return
     }
 
     // Create a message object for each token
-    const messages = tokens.map(token => ({
+    const messages = allTokens.map(token => ({
       token: token,
       notification: {
         title: title,
@@ -29,16 +29,16 @@ const sendNotification = async (title, body, userId) => {
       }
     }))
 
-    // Firebase recommends sending notifications in batches
-    const BATCH_SIZE = 500 // Adjust batch size if needed
+    // Send notifications in batches (e.g., max batch size is 500)
+    const BATCH_SIZE = 500
     for (let i = 0; i < messages.length; i += BATCH_SIZE) {
       const batch = messages.slice(i, i + BATCH_SIZE)
-      const response = await admin.messaging().sendEachForMulticast(batch)
-      console.log(`Batch ${i / BATCH_SIZE + 1} sent successfully`, response)
+      const response = await admin.messaging().sendAll(batch)
+      console.log(`Successfully sent batch ${i / BATCH_SIZE + 1}:`, response)
     }
   } catch (error) {
-    console.error('Error sending message:', error)
+    console.error('Error sending notifications to all users:', error)
   }
 }
 
-module.exports = { sendNotification }
+module.exports = { sendNotificationToAllUsers }

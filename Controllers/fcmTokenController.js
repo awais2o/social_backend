@@ -6,10 +6,9 @@ const saveFcmToken = async (req, res) => {
   const { token, userId } = req.body
 
   try {
+    // Check if token and userId are provided
     if (!token || !userId) {
-      return res
-        .status(400)
-        .send('Invalid request. Token and userId are required.')
+      return res.status(400).json({ message: 'Token and userId are required.' })
     }
 
     // Reference to the user document in Firestore
@@ -18,20 +17,27 @@ const saveFcmToken = async (req, res) => {
     // Fetch the user document
     const userDoc = await userRef.get()
 
+    // Check if the document exists
     if (!userDoc.exists) {
-      // Create the document if it doesn't exist
+      // Create a new document with the token array if the user doesn't exist
       await userRef.set({
-        fcmTokens: [token] // Add the token to a new array
+        fcmTokens: [token] // Initialize with the token in an array
       })
     } else {
-      // Update the existing document with the new token using arrayUnion to avoid duplicates
-      await userRef.update({
-        fcmTokens: admin.firestore.FieldValue.arrayUnion(token)
-      })
+      // Check if the token is already in the array to prevent duplicates
+      const userData = userDoc.data()
+      if (!userData.fcmTokens || !userData.fcmTokens.includes(token)) {
+        // Update the document by adding the new token using arrayUnion
+        await userRef.update({
+          fcmTokens: admin.firestore.FieldValue.arrayUnion(token)
+        })
+      }
     }
 
-    return res.status(200).json({ message: 'Token saved successfully' })
+    // Return success response
+    return res.status(200).json({ message: 'FCM token saved successfully' })
   } catch (error) {
+    // Log error and return a 500 error response
     console.error('Error saving FCM token:', error)
     return res
       .status(500)
