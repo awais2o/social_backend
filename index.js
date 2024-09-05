@@ -7,6 +7,14 @@ const app = express()
 const cors = require('cors')
 
 app.use(express.json())
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept'
+  )
+  next()
+})
 const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',')
 app.use(
   cors({
@@ -15,7 +23,7 @@ app.use(
     credentials: true
   })
 )
-app.options('*', cors()); // Add this line before your routes
+app.options('*', cors()) // Add this line before your routes
 
 app.use('/api/posts', postRoutes)
 app.use('/api', generalRoute)
