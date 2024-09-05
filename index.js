@@ -15,6 +15,7 @@ app.use(
     credentials: true
   })
 )
+app.options('*', cors()); // Add this line before your routes
 
 app.use('/api/posts', postRoutes)
 app.use('/api', generalRoute)
