@@ -1,5 +1,6 @@
 const { db } = require('../config/firebaseConfig')
 const { v4: uuidv4 } = require('uuid')
+const { sendNotification } = require('../functions/sendNotifications')
 
 exports.createPost = async (req, res) => {
   const { caption, postURL, uid, displayName } = req.body
@@ -25,7 +26,7 @@ exports.createPost = async (req, res) => {
     }
 
     await db.collection('posts').doc(postId).set(newPost)
-
+    sendNotification('New Post', `${displayName} created a new Post`, uid)
     res
       .status(201)
       .json({ message: 'Post created successfully', post: newPost })
