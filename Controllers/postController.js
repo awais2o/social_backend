@@ -8,7 +8,7 @@ const {
 exports.createPost = async (req, res) => {
   const { caption, postURL, uid, displayName } = req.body
 
-  if (!caption || !postURL || !uid) {
+  if ( !postURL || !uid) {
     return res
       .status(400)
       .json({ error: 'Caption, postURL, and uid are required' })
