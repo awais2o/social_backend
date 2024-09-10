@@ -6,9 +6,9 @@ const {
 } = require('../functions/sendNotifications')
 
 exports.createPost = async (req, res) => {
-  const { caption, postURL, uid, displayName } = req.body
+  const { caption, postURL, uid, displayName, ProfilePhotoURL } = req.body
 
-  if ( !postURL || !uid) {
+  if (!postURL || !uid) {
     return res
       .status(400)
       .json({ error: 'Caption, postURL, and uid are required' })
@@ -19,6 +19,7 @@ exports.createPost = async (req, res) => {
 
     const newPost = {
       postId,
+      ProfilePhotoURL,
       uid,
       displayName,
       caption,
